@@ -1,0 +1,15 @@
+set localroot /
+set cvsroot /var/cvsbackup/store
+set cvspath etc
+set dl1 9
+include_tree /etc
+include_tree /usr/local/etc
+include_tree /usr/local/news/etc
+include_tree /var/cron/tabs
+exclude_rx ^/etc/namedb/secondary/
+exclude_rx ^/etc/pw\.[0-9]+~$
+exclude_rx \.db$
+exclude_rx \.swp$
+copy_match passwd rx ^/etc/master\.passwd$
+copy_match passwd rx ^/etc/pw\.
+copy_action passwd filter perl -pe 's/^([^:]*):[^:]*:/\1:x:/'

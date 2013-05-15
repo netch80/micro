@@ -1,0 +1,92 @@
+--- contrib/tcp_wrappers/socket.c.0	Tue Apr  1 13:52:05 2008
++++ contrib/tcp_wrappers/socket.c	Tue Apr  1 13:53:35 2008
+@@ -220,9 +220,9 @@
+ 	hints.ai_flags = AI_PASSIVE | AI_CANONNAME | AI_NUMERICHOST;
+ 	if ((err = getaddrinfo(host->name, NULL, &hints, &res0)) == 0) {
+ 	    freeaddrinfo(res0);
+-	    tcpd_warn("host name/name mismatch: "
+-		      "reverse lookup results in non-FQDN %s",
+-		      host->name);
++	    syslog(deny_severity, "host name/name mismatch: "
++		      "reverse lookup for %s results in non-FQDN %s",
++		      host->addr, host->name);
+ 	    strcpy(host->name, paranoid);	/* name is bad, clobber it */
+ 	}
+ 	err = !err;
+@@ -254,9 +254,11 @@
+ 	     * may be a transient problem or a botched name server setup.
+ 	     */
+ 
+-	    tcpd_warn("can't verify hostname: getaddrinfo(%s, %s) failed",
++	    syslog(deny_severity,
++		"can't verify hostname: getaddrinfo(%s, %s) failed for %s",
+ 		      host->name,
+-		      (sin->sa_family == AF_INET) ? "AF_INET" : "AF_INET6");
++		      (sin->sa_family == AF_INET) ? "AF_INET" : "AF_INET6",
++		      host->addr);
+ 
+ 	} else if ((res0->ai_canonname == NULL
+ 		    || STR_NE(host->name, res0->ai_canonname))
+@@ -268,9 +270,10 @@
+ 	     * problem. It could also be that someone is trying to spoof us.
+ 	     */
+ 
+-	    tcpd_warn("host name/name mismatch: %s != %.*s",
++	    syslog(deny_severity, "host name/name mismatch: %s != %.*s, addr=%s",
+ 		      host->name, STRING_LENGTH,
+-		      (res0->ai_canonname == NULL) ? "" : res0->ai_canonname);
++		      (res0->ai_canonname == NULL) ? "" : res0->ai_canonname,
++		      host->addr);
+ 
+ 	} else {
+ 
+@@ -313,9 +316,11 @@
+ 
+ 	    getnameinfo(sin, salen, hname, sizeof(hname),
+ 			NULL, 0, NI_NUMERICHOST);
+-	    tcpd_warn("host name/address mismatch: %s != %.*s",
++	    syslog(deny_severity,
++		      "host name/address mismatch: %s != %.*s, origaddr=%s",
+ 		      hname, STRING_LENGTH,
+-		      (res0->ai_canonname == NULL) ? "" : res0->ai_canonname);
++		      (res0->ai_canonname == NULL) ? "" : res0->ai_canonname,
++		      host->addr);
+ 	}
+ 	strcpy(host->name, paranoid);		/* name is bad, clobber it */
+ 	if (res0)
+@@ -359,8 +364,9 @@
+ 	     * may be a transient problem or a botched name server setup.
+ 	     */
+ 
+-	    tcpd_warn("can't verify hostname: gethostbyname(%s) failed",
+-		      host->name);
++	    syslog(deny_severity,
++		"can't verify hostname: gethostbyname(%s) failed for origaddr %s",
++		      host->name, host->addr);
+ 
+ 	} else if (STR_NE(host->name, hp->h_name)
+ 		   && STR_NE(host->name, "localhost")) {
+@@ -371,8 +377,8 @@
+ 	     * problem. It could also be that someone is trying to spoof us.
+ 	     */
+ 
+-	    tcpd_warn("host name/name mismatch: %s != %.*s",
+-		      host->name, STRING_LENGTH, hp->h_name);
++	    syslog(deny_severity, "host name/name mismatch: %s != %.*s, addr=%s",
++		      host->name, STRING_LENGTH, hp->h_name, host->addr);
+ 
+ 	} else {
+ 
+@@ -396,8 +402,10 @@
+ 	     * server.
+ 	     */
+ 
+-	    tcpd_warn("host name/address mismatch: %s != %.*s",
+-		      inet_ntoa(sin->sin_addr), STRING_LENGTH, hp->h_name);
++	    syslog(deny_severity,
++		"host name/address mismatch: %s != %.*s, origaddr=%s",
++		      inet_ntoa(sin->sin_addr), STRING_LENGTH, hp->h_name,
++		      host->addr);
+ 	}
+ 	strcpy(host->name, paranoid);		/* name is bad, clobber it */
+     }

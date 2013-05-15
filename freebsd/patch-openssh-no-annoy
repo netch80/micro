@@ -1,0 +1,21 @@
+--- crypto/openssh/canohost.c.orig	Tue Apr  1 13:40:14 2008
++++ crypto/openssh/canohost.c	Tue Apr  1 13:40:44 2008
+@@ -115,8 +115,6 @@
+ 	hints.ai_family = from.ss_family;
+ 	hints.ai_socktype = SOCK_STREAM;
+ 	if (getaddrinfo(name, NULL, &hints, &aitop) != 0) {
+-		logit("reverse mapping checking getaddrinfo for %.700s "
+-		    "[%s] failed - POSSIBLE BREAK-IN ATTEMPT!", name, ntop);
+ 		return xstrdup(ntop);
+ 	}
+ 	/* Look for the address from the list of addresses. */
+@@ -130,9 +128,6 @@
+ 	/* If we reached the end of the list, the address was not there. */
+ 	if (!ai) {
+ 		/* Address not found for the host name. */
+-		logit("Address %.100s maps to %.600s, but this does not "
+-		    "map back to the address - POSSIBLE BREAK-IN ATTEMPT!",
+-		    ntop, name);
+ 		return xstrdup(ntop);
+ 	}
+ 	return xstrdup(name);

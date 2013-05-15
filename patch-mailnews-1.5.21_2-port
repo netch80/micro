@@ -1,0 +1,370 @@
+diff -u -rNu 01/mutt-1.5.21/OPS work/mutt-1.5.21/OPS
+--- 01/mutt-1.5.21/OPS	2010-03-01 19:56:19.000000000 +0200
++++ work/mutt-1.5.21/OPS	2013-04-07 23:23:01.996386269 +0300
+@@ -150,6 +150,9 @@
+ OP_REFORMAT_WINCH "{internal}"
+ OP_RENAME_MAILBOX "rename the current mailbox (IMAP only)"
+ OP_REPLY "reply to a message"
++OP_REPLY_MNP "private reply to mailnews-gated message"
++OP_REPLY_MNQ "reply to newsgroup to mailnews-gated message"
++OP_REPLY_MNC "comment-reply to newsgroup to mailnews-gated message"
+ OP_RESEND "use the current message as a template for a new one"
+ OP_SAVE "save message/attachment to a mailbox/file"
+ OP_SEARCH "search for a regular expression"
+diff -u -rNu 01/mutt-1.5.21/curs_main.c work/mutt-1.5.21/curs_main.c
+--- 01/mutt-1.5.21/curs_main.c	2013-04-07 23:22:09.418784604 +0300
++++ work/mutt-1.5.21/curs_main.c	2013-04-07 23:23:01.999419458 +0300
+@@ -2096,13 +2096,16 @@
+         break;
+ 
+       case OP_REPLY:
++      case OP_REPLY_MNC:
++      case OP_REPLY_MNP:
++      case OP_REPLY_MNQ:
+ 
+ 	CHECK_ATTACH;
+ 	CHECK_MSGCOUNT;
+         CHECK_VISIBLE;
+ 	if (option (OPTPGPAUTODEC) && (tag || !(CURHDR->security & PGP_TRADITIONAL_CHECKED)))
+ 	  mutt_check_traditional_pgp (tag ? NULL : CURHDR, &menu->redraw);
+-	ci_send_message (SENDREPLY, NULL, NULL, Context, tag ? NULL : CURHDR);
++	ci_send_message (mutt_mailnews_reply_flags(op), NULL, NULL, Context, tag ? NULL : CURHDR);
+ 	menu->redraw = REDRAW_FULL;
+ 	break;
+ 
+diff -u -rNu 01/mutt-1.5.21/functions.h work/mutt-1.5.21/functions.h
+--- 01/mutt-1.5.21/functions.h	2010-08-24 19:34:21.000000000 +0300
++++ work/mutt-1.5.21/functions.h	2013-04-07 23:23:02.000850571 +0300
+@@ -124,6 +124,9 @@
+   { "query",			OP_QUERY,			"Q" },
+   { "quit",			OP_QUIT,			"q" },
+   { "reply",			OP_REPLY,			"r" },
++  { "reply-mailnews-private",	OP_REPLY_MNP,			NULL },
++  { "reply-mailnews",		OP_REPLY_MNQ,			NULL },
++  { "reply-mailnews-comment",	OP_REPLY_MNC,			NULL },
+   { "show-limit",		OP_MAIN_SHOW_LIMIT,		"\033l" },
+   { "sort-mailbox",		OP_SORT,			"o" },
+   { "sort-reverse",		OP_SORT_REVERSE,		"O" },
+diff -u -rNu 01/mutt-1.5.21/globals.h work/mutt-1.5.21/globals.h
+--- 01/mutt-1.5.21/globals.h	2009-08-25 22:08:52.000000000 +0300
++++ work/mutt-1.5.21/globals.h	2013-04-07 23:23:02.002727248 +0300
+@@ -69,6 +69,7 @@
+ WHERE char *Locale;
+ WHERE char *MailcapPath;
+ WHERE char *Maildir;
++WHERE char *MailnewsServer;
+ #if defined(USE_IMAP) || defined(USE_POP)
+ WHERE char *MessageCachedir;
+ #endif
+diff -u -rNu 01/mutt-1.5.21/init.h work/mutt-1.5.21/init.h
+--- 01/mutt-1.5.21/init.h	2013-04-07 23:22:09.928239344 +0300
++++ work/mutt-1.5.21/init.h	2013-04-07 23:23:02.007623146 +0300
+@@ -1364,6 +1364,11 @@
+   ** If \fIset\fP, mutt will restrict possible characters in mailcap % expandos
+   ** to a well-defined set of safe characters.  This is the safe setting,
+   ** but we are not sure it doesn't break some more advanced MIME stuff.
++  ** This specifies email address of mailnews server.
++  */
++  { "mailnews_server",  DT_STR,  R_NONE, UL &MailnewsServer, UL "" },
++  /*
++  ** .pp
+   ** .pp
+   ** \fBDON'T CHANGE THIS SETTING UNLESS YOU ARE REALLY SURE WHAT YOU ARE
+   ** DOING!\fP
+diff -u -rNu 01/mutt-1.5.21/mbox.c work/mutt-1.5.21/mbox.c
+--- 01/mutt-1.5.21/mbox.c	2013-04-07 23:22:09.436599629 +0300
++++ work/mutt-1.5.21/mbox.c	2013-04-07 23:23:02.010303795 +0300
+@@ -165,7 +165,7 @@
+       else
+ 	hdr->received = t - mutt_local_tz (t);
+ 
+-      hdr->env = mutt_read_rfc822_header (ctx->fp, hdr, 0, 0);
++      hdr->env = mutt_read_rfc822_header (ctx->fp, hdr, 1, 0);
+ 
+       loc = ftello (ctx->fp);
+ 
+@@ -308,7 +308,7 @@
+       curhdr->offset = loc;
+       curhdr->index = ctx->msgcount;
+ 	
+-      curhdr->env = mutt_read_rfc822_header (ctx->fp, curhdr, 0, 0);
++      curhdr->env = mutt_read_rfc822_header (ctx->fp, curhdr, 1, 0);
+ 
+       /* if we know how long this message is, either just skip over the body,
+        * or if we don't know how many lines there are, count them now (this will
+diff -u -rNu 01/mutt-1.5.21/mh.c work/mutt-1.5.21/mh.c
+--- 01/mutt-1.5.21/mh.c	2010-08-24 19:34:21.000000000 +0300
++++ work/mutt-1.5.21/mh.c	2013-04-07 23:23:02.012882759 +0300
+@@ -651,7 +651,7 @@
+   {
+     if (!h)
+       h = mutt_new_header ();
+-    h->env = mutt_read_rfc822_header (f, h, 0, 0);
++    h->env = mutt_read_rfc822_header (f, h, 1, 0);
+ 
+     fstat (fileno (f), &st);
+     safe_fclose (&f);
+diff -u -rNu 01/mutt-1.5.21/mutt.h work/mutt-1.5.21/mutt.h
+--- 01/mutt-1.5.21/mutt.h	2013-04-07 23:22:09.934394834 +0300
++++ work/mutt-1.5.21/mutt.h	2013-04-07 23:23:02.014401588 +0300
+@@ -307,6 +307,9 @@
+ #define SENDMAILX	(1<<6)
+ #define SENDKEY		(1<<7)
+ #define SENDRESEND	(1<<8)
++#define SENDREPLYMNP	(1<<9)
++#define SENDREPLYMNQ	(1<<10)
++#define SENDREPLYMNC	(1<<11)
+ 
+ /* flags to _mutt_select_file() */
+ #define M_SEL_BUFFY	(1<<0)
+diff -u -rNu 01/mutt-1.5.21/muttlib.c work/mutt-1.5.21/muttlib.c
+--- 01/mutt-1.5.21/muttlib.c	2013-04-07 23:22:09.605965980 +0300
++++ work/mutt-1.5.21/muttlib.c	2013-04-07 23:23:02.017176936 +0300
+@@ -27,6 +27,7 @@
+ #include "mailbox.h"
+ #include "mx.h"
+ #include "url.h"
++#include "keymap_defs.h"
+ 
+ #ifdef USE_IMAP
+ #include "imap.h"
+@@ -1839,6 +1840,15 @@
+   return vstring;
+ }
+ 
++int mutt_mailnews_reply_flags( int cmd )
++{
++  switch( cmd ) {
++    case OP_REPLY_MNP: return SENDREPLY|SENDREPLYMNP; break;
++    case OP_REPLY_MNQ: return SENDREPLY|SENDREPLYMNQ; break;
++    case OP_REPLY_MNC: return SENDREPLY|SENDREPLYMNC; break;
++    default: return SENDREPLY; break;
++  }
++}
+ REGEXP *mutt_compile_regexp (const char *s, int flags)
+ {
+   REGEXP *pp = safe_calloc (sizeof (REGEXP), 1);
+diff -u -rNu 01/mutt-1.5.21/pager.c work/mutt-1.5.21/pager.c
+--- 01/mutt-1.5.21/pager.c	2013-04-07 23:22:09.609673241 +0300
++++ work/mutt-1.5.21/pager.c	2013-04-07 23:23:02.019671258 +0300
+@@ -2543,14 +2543,17 @@
+ 	break;
+ 
+       case OP_REPLY:
++      case OP_REPLY_MNP:
++      case OP_REPLY_MNQ:
++      case OP_REPLY_MNC:
+ 	CHECK_MODE(IsHeader (extra) || IsMsgAttach (extra));
+         CHECK_ATTACH;      
+         if (IsMsgAttach (extra)) 
+ 	  mutt_attach_reply (extra->fp, extra->hdr, extra->idx,
+ 			     extra->idxlen, extra->bdy,
+-			     SENDREPLY);
++			     mutt_mailnews_reply_flags(ch));
+ 	else
+-	  ci_send_message (SENDREPLY, NULL, NULL, extra->ctx, extra->hdr);
++	  ci_send_message (mutt_mailnews_reply_flags(ch), NULL, NULL, extra->ctx, extra->hdr);
+ 	redraw = REDRAW_FULL;
+ 	break;
+ 
+diff -u -rNu 01/mutt-1.5.21/protos.h work/mutt-1.5.21/protos.h
+--- 01/mutt-1.5.21/protos.h	2010-08-24 19:34:21.000000000 +0300
++++ work/mutt-1.5.21/protos.h	2013-04-07 23:23:02.022043224 +0300
+@@ -213,7 +213,7 @@
+ void mutt_make_attribution (CONTEXT *ctx, HEADER *cur, FILE *out);
+ void mutt_make_forward_subject (ENVELOPE *env, CONTEXT *ctx, HEADER *cur);
+ void mutt_make_help (char *, size_t, char *, int, int);
+-void mutt_make_misc_reply_headers (ENVELOPE *env, CONTEXT *ctx, HEADER *cur, ENVELOPE *curenv);
++void mutt_make_misc_reply_headers (ENVELOPE *env, CONTEXT *ctx, HEADER *cur, ENVELOPE *curenv, int flags);
+ void mutt_make_post_indent (CONTEXT *ctx, HEADER *cur, FILE *out);
+ void mutt_merge_envelopes(ENVELOPE* base, ENVELOPE** extra);
+ void mutt_message_to_7bit (BODY *, FILE *);
+@@ -256,6 +256,7 @@
+ void mutt_view_attachments (HEADER *);
+ void mutt_write_address_list (ADDRESS *adr, FILE *fp, int linelen, int display);
+ void mutt_set_virtual (CONTEXT *);
++int mutt_mailnews_reply_flags(int);
+ 
+ int mutt_add_to_rx_list (RX_LIST **list, const char *s, int flags, BUFFER *err);
+ int mutt_addr_is_user (ADDRESS *);
+diff -u -rNu 01/mutt-1.5.21/recvcmd.c work/mutt-1.5.21/recvcmd.c
+--- 01/mutt-1.5.21/recvcmd.c	2010-09-13 20:19:55.000000000 +0300
++++ work/mutt-1.5.21/recvcmd.c	2013-04-07 23:23:02.024056224 +0300
+@@ -775,7 +775,7 @@
+   }
+   
+   mutt_fix_reply_recipients (env);
+-  mutt_make_misc_reply_headers (env, Context, curhdr, curenv);
++  mutt_make_misc_reply_headers (env, Context, curhdr, curenv, 0);
+ 
+   if (parent)
+     mutt_add_to_reference_headers (env, curenv, NULL, NULL);
+diff -u -rNu 01/mutt-1.5.21/send.c work/mutt-1.5.21/send.c
+--- 01/mutt-1.5.21/send.c	2010-09-13 20:19:55.000000000 +0300
++++ work/mutt-1.5.21/send.c	2013-04-07 23:23:02.027127684 +0300
+@@ -618,7 +618,7 @@
+ }
+ 
+ void mutt_make_misc_reply_headers (ENVELOPE *env, CONTEXT *ctx,
+-				    HEADER *cur, ENVELOPE *curenv)
++				    HEADER *cur, ENVELOPE *curenv, int flags)
+ {
+   /* This takes precedence over a subject that might have
+    * been taken from a List-Post header.  Is that correct?
+@@ -626,8 +626,17 @@
+   if (curenv->real_subj)
+   {
+     FREE (&env->subject);
+-    env->subject = safe_malloc (mutt_strlen (curenv->real_subj) + 5);
+-    sprintf (env->subject, "Re: %s", curenv->real_subj);	/* __SPRINTF_CHECKED__ */
++    const char* s = curenv->real_subj;
++    if( (flags&(SENDREPLYMNP|SENDREPLYMNQ|SENDREPLYMNC)) && s &&
++        !strncasecmp( s, "[NEWS]", 6 ) )
++    {
++      s += 6;
++      while( *s && isspace( *s ) )
++        ++s;
++    }
++
++    env->subject = safe_malloc (mutt_strlen (s) + 5);
++    sprintf (env->subject, "Re: %s", s);      /* __SPRINTF_CHECKED__ */
+   }
+   else if (!env->subject)
+     env->subject = safe_strdup ("Re: your mail");
+@@ -688,6 +697,125 @@
+     mutt_free_list (&env->references);
+ }
+ 
++static void
++mutt_make_mailnews_headers(
++    ENVELOPE *env, HEADER *cur, int flags )
++{
++  char buffer[LONG_STRING];
++  
++  /* When replying to newsgroup, change To: to server address,
++     and save original To: in X-Comment-To: */
++  if( flags&SENDREPLYMNQ && env->to ) {
++    LIST* tmp;
++    size_t len2;
++    /* Move To: to X-Comment-To: */
++    strfcpy( buffer, "X-Comment-To: ", sizeof buffer );
++    len2 = strlen( buffer );
++    rfc822_write_address( buffer+len2, sizeof(buffer)-len2, env->to, 1 );
++    tmp = env->userhdrs;
++    if( !tmp ) {
++      tmp = env->userhdrs = mutt_new_list();
++    }
++    else {
++      while( tmp->next )
++        tmp = tmp->next;
++      tmp->next = mutt_new_list();
++      tmp = tmp->next;
++    }
++    tmp->data = safe_strdup( buffer );
++  }
++  if( flags&SENDREPLYMNC ) {
++    LIST* tmp;
++    LIST* ah = NULL;
++    for( ah = cur->env->userhdrs; ah != NULL; ah = ah->next ) {
++      if( !strncasecmp( ah->data, "X-Comment-To:",
++                      strlen("X-Comment-To:") ) )
++      {
++        tmp = env->userhdrs;
++        if( !tmp )
++          tmp = env->userhdrs = mutt_new_list();
++        else {
++          while( tmp->next )
++            tmp = tmp->next;
++          tmp->next = mutt_new_list();
++          tmp = tmp->next;
++        }
++        tmp->data = safe_strdup( ah->data );
++        break;
++      }
++    }
++  }
++  if( (flags&(SENDREPLYMNQ|SENDREPLYMNC)) ) {
++    /* Set To: to MailnewsServer */
++    rfc822_free_address(&env->to);
++    if( MailnewsServer )
++      env->to = rfc822_parse_adrlist( env->to, MailnewsServer );
++  }
++
++  /* In mailnews case, transfer Newsgroups: */
++  if( (flags&(SENDREPLYMNP|SENDREPLYMNQ|SENDREPLYMNC)) ) {
++    LIST* ah = NULL;
++    LIST* tmp;
++    const char* glist = NULL;
++    /* Respect followup-to when posting to newsgroups */
++    if( (flags&(SENDREPLYMNQ|SENDREPLYMNC)) ) {
++      for( ah = cur->env->userhdrs; ah != NULL; ah = ah->next ) {
++        if( ah->data &&
++            !strncasecmp( ah->data, "Followup-To:", strlen("Followup-To:") ) )
++        {
++          glist = ah->data;
++          break;
++        }
++      }
++    }
++    if( !glist ) {
++      for( ah = cur->env->userhdrs; ah != NULL; ah = ah->next ) {
++        if( ah->data &&
++            !strncasecmp( ah->data, "Newsgroups:", strlen("Newsgroups:") ) )
++        {
++          glist = ah->data;
++          break;
++        }
++      }
++    }
++    /* Quick exits here. I don't want to increase nesting level to hell */
++    if( !glist )
++      goto No_Newsgroups;
++    /* Skip field name and possible spaces after it */
++    while( *glist && *glist != ':' )
++      glist++;
++    if( *glist == ':' ) {
++      glist++;
++      while( *glist && isspace( *glist ) )
++        glist++;
++    }
++    if( !*glist )
++      goto No_Newsgroups;
++    /* Add entry to user headers list */
++    tmp = env->userhdrs;
++    if( !tmp )
++      tmp = env->userhdrs = mutt_new_list();
++    else {
++      while(tmp->next)
++        tmp = tmp->next;
++      tmp->next = mutt_new_list();
++      tmp = tmp->next;
++    }
++    if( tmp ) {
++      /* Form and add header */
++      size_t len2;
++      if( flags&SENDREPLYMNP )
++        strfcpy( buffer, "X-Was-Newsgroups: ", sizeof buffer );
++      else
++        strfcpy( buffer, "Newsgroups: ", sizeof buffer );
++      len2 = strlen( buffer );
++      strfcpy( buffer+len2, glist, sizeof(buffer)-len2 );
++      tmp->data = safe_strdup(buffer);
++    } /* tmp != NULL */
++  } /* mailnews case */
++No_Newsgroups: ;
++}
++
+ static int
+ envelope_defaults (ENVELOPE *env, CONTEXT *ctx, HEADER *cur, int flags)
+ {
+@@ -739,7 +867,9 @@
+       return (-1);
+     }
+ 
+-    mutt_make_misc_reply_headers (env, ctx, cur, curenv);
++    mutt_make_misc_reply_headers (env, ctx, cur, curenv, 0);
++    if( flags&(SENDREPLYMNQ|SENDREPLYMNC) )                                   
++      mutt_make_mailnews_headers( env, cur, flags );
+     mutt_make_reference_headers (tag ? NULL : curenv, env, ctx);
+   }
+   else if (flags & SENDFORWARD)

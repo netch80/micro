@@ -1,0 +1,20 @@
+--- ./gcc/config/i386/freebsd.h.orig	2010-12-09 15:27:07.000000000 +0200
++++ ./gcc/config/i386/freebsd.h	2012-01-01 21:25:39.926151676 +0200
+@@ -145,5 +145,5 @@
+ 
+ /* Support for i386 has been removed from FreeBSD 6.0 onward.  */
+ #if FBSD_MAJOR >= 6
+-#define SUBTARGET32_DEFAULT_CPU "i486"
++#define SUBTARGET32_DEFAULT_CPU "pentium2"
+ #endif
+--- ./gcc/config/i386/i386.c.orig	2011-11-25 12:29:42.000000000 +0200
++++ ./gcc/config/i386/i386.c	2012-01-01 21:24:57.404717236 +0200
+@@ -2477,7 +2477,7 @@
+ 
+ 
+ #ifndef SUBTARGET32_DEFAULT_CPU
+-#define SUBTARGET32_DEFAULT_CPU "i386"
++#define SUBTARGET32_DEFAULT_CPU "pentium2"
+ #endif
+ 
+ /* The svr4 ABI for the i386 says that records and unions are returned

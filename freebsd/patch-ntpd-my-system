@@ -1,0 +1,29 @@
+--- contrib/ntp/ntpd/ntp_control.c.orig	2009-11-25 14:46:41.110578911 +0200
++++ contrib/ntp/ntpd/ntp_control.c	2009-11-25 14:48:35.849886042 +0200
+@@ -1299,23 +1299,13 @@
+ 		break;
+ 
+ 	case CS_PROCESSOR:
+-#ifndef HAVE_UNAME
+-		ctl_putstr(sys_var[CS_PROCESSOR].text, str_processor,
+-		    sizeof(str_processor) - 1);
+-#else
+-		ctl_putstr(sys_var[CS_PROCESSOR].text,
+-		    utsnamebuf.machine, strlen(utsnamebuf.machine));
+-#endif /* HAVE_UNAME */
++		sprintf(str, "pdp-3280");
++		ctl_putstr(sys_var[CS_PROCESSOR].text, str, strlen(str));
+ 		break;
+ 
+ 	case CS_SYSTEM:
+-#ifndef HAVE_UNAME
+-		ctl_putstr(sys_var[CS_SYSTEM].text, str_system,
+-		    sizeof(str_system) - 1);
+-#else
+-		sprintf(str, "%s/%s", utsnamebuf.sysname, utsnamebuf.release);
++		sprintf(str, "Neko/12.5(2.0)ST1");
+ 		ctl_putstr(sys_var[CS_SYSTEM].text, str, strlen(str));
+-#endif /* HAVE_UNAME */
+ 		break;
+ 
+ 	case CS_VERSION:
