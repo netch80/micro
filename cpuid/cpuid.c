@@ -57,6 +57,8 @@ char *Brands[MAXBRANDS] = {
 
 #define cpuid(in,a,b,c,d)\
   asm("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in));
+#define cpuidx(in,in2,a,b,c,d)\
+  asm("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in), "c" (in2));
 
 int main(){
   int i;
@@ -70,8 +72,9 @@ int main(){
   printf(" eax in    eax      ebx      ecx      edx\n");
   for(i=0;i<=maxi;i++){
     unsigned long eax,ebx,ecx,edx;
+    ecx = 0; /* basic query for leaves that dependent on it */
 
-    cpuid(i,eax,ebx,ecx,edx);
+    cpuidx(i,ecx,eax,ebx,ecx,edx);
     printf("%08x %08lx %08lx %08lx %08lx\n",i,eax,ebx,ecx,edx);
   }
   cpuid(0x80000000,maxei,unused,unused,unused);
@@ -111,7 +114,7 @@ int main(){
   exit(0);
 }
 
-char *Intel_feature_flags[32] = {
+char *Intel_feature_flags1[32] = {
   "FPU    Floating Point Unit",
   "VME    Virtual 8086 Mode Enhancements",
   "DE     Debugging Extensions",
@@ -130,7 +133,7 @@ char *Intel_feature_flags[32] = {
   "CMOV   Conditional Move and Compare Instructions",
   "FGPAT  Page Attribute Table",
   "PSE-36 36-bit Page Size Extension",
-  "PN     Processor Serial Number present and enabled",
+  "PSN    Processor Serial Number present and enabled",
   "CLFSH  CFLUSH instruction",
   "20     reserved",
   "DS     Debug store",
@@ -159,27 +162,29 @@ char *Intel_feature_flags2[32] = {
   "SSSE3    Supplemental Streaming SIMD Extension 3",
   "CNXT-ID  L1 Context ID",
   NULL,
-  NULL,
+  "FMA      Fused Multiply-Add",
   "CX16     CMPXCHG16B",
   "xTPR     Send Task Priority messages",
   "PDCM     Perfmon and debug capability",
   NULL,
-  NULL,
+  "PCID     Process-Context Identifiers",
   "DCA      Direct Cache Access",
   "SSE4.1   Streaming SIMD Extension 4.1",
   "SSE4.2   Streaming SIMD Extension 4.2",
   "x2APIC   Extended xAPIC support",
   "MOVBE    MOVBE instruction",
   "POPCNT   POPCNT instruction",
-  NULL,
+  "TSC-Deadline",
   "AESNI    AES Instruction set",
   "XSAVE    XSAVE/XSTOR states",
   "OSXSAVE  OS-enabled extended state managerment",
   "AVX      AVX extensions",
-  NULL, NULL, NULL
+  "F16C     16-bit floating convert instructions",
+  "RDRAND   RDRAND instruction",
+  NULL
 };
 
-char *Intel_ext_feature_flags[32] = {
+char *Intel_ext_feature_flags1[32] = {
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL,
   "SYSCALL   SYSCALL/SYSRET instructions",
@@ -199,6 +204,16 @@ char *Intel_ext_feature_flags2[32] = {
   "LAHF      LAHF/SAHF available in IA-32e mode",
   NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+};
+
+char *Intel_struct_ext_feature_flags_7_0_b[32] = {
+  "FSGSBASE", "IA32_TSC_ADJUST MSR",
+  NULL, "BMI1", "HLE", "AVX2", NULL, "SMEP",
+  "BMI2", "Enhanced REP MOVSB/STOSB",
+  "INVPCID", "RTM", "Quality of Service Monitoring capability",
+  "Deprecates FPU CS and FPU DS", NULL, NULL,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
@@ -426,14 +441,16 @@ void dointel(int maxi){
       printf("Hyper threading siblings: %d\n",siblings);
     }
 
-    printf("\nFeature flags: %08x:\n",feature_flags);
+    printf("\nFeature flags set 1 (CPUID.01H:EDX): %08x:\n",
+      feature_flags);
     for(i=0;i<32;i++){
       if(feature_flags & (1<<i)){
-	printf("%s\n",Intel_feature_flags[i]);
+	printf("%s\n",Intel_feature_flags1[i]);
       }
     }
     if(feature_flags2) {
-      printf("\nFeature flags set 2: %08x:\n",feature_flags2);
+      printf("\nFeature flags set 2 (CPUID.01H:ECX): %08x:\n",
+	feature_flags2);
       for (i = 0; i < 32; ++i) {
         if (feature_flags2 & (1 << i)) {
           const char* fn = Intel_feature_flags2[i];
@@ -445,10 +462,11 @@ void dointel(int maxi){
       }
     }
     if(ext_feature_flags) {
-      printf("\nExtended feature flags: %08x:\n",ext_feature_flags);
+      printf("\nExtended feature flags set 1 (CPUID.80000001H:EDX): %08x\n",
+	ext_feature_flags);
       for (i = 0; i < 32; ++i) {
         if (ext_feature_flags & (1 << i)) {
-          const char* fn = Intel_ext_feature_flags[i];
+          const char* fn = Intel_ext_feature_flags1[i];
           if (fn != NULL)
             printf("%s\n", fn);
           else
@@ -457,7 +475,8 @@ void dointel(int maxi){
       }
     }
     if(ext_feature_flags2) {
-      printf("\nExtended feature flags set 2: %08x:\n",ext_feature_flags2);
+      printf("\nExtended feature flags set 2 (CPUID.80000001H:ECX): %08x\n",
+	ext_feature_flags2);
       for (i = 0; i < 32; ++i) {
         if (ext_feature_flags2 & (1 << i)) {
           const char* fn = Intel_ext_feature_flags2[i];
@@ -475,7 +494,7 @@ void dointel(int maxi){
     int ntlb,i;
 
     ntlb = 255;
-    printf("TLB and cache info:\n");
+    printf("Old-styled TLB and cache info:\n");
     for(i=0;i<ntlb;i++){
       unsigned long eax,ebx,ecx,edx;
 
@@ -511,13 +530,79 @@ void dointel(int maxi){
 
     cpuid(1,signature,unused,unused,unused);
     cpuid(3,unused,unused,ecx,edx);
-    printf("Processor serial: ");
+    printf("\nProcessor serial: ");
     printf("%04lX",signature >> 16);
     printf("-%04lX",signature & 0xffff);
     printf("-%04lX",edx >> 16);
     printf("-%04lX",edx & 0xffff);
     printf("-%04lX",ecx >> 16);
     printf("-%04lX\n",ecx & 0xffff);
+  }
+  if (maxi >= 4) {
+    unsigned long index, eax, ebx, ecx, edx, ctype;
+    unsigned long linesize, partitions, ways, sets, t;
+    for (index = 0; ; ++index) {
+      cpuidx(4,index,eax,ebx,ecx,edx);
+      ctype = eax&31;
+      if (ctype == 0)
+	break;
+      if (index==0)
+	printf("\nDeterministic Cache Parameters:\n");
+      printf("index=%lu: eax=%08lx ebx=%08lx ecx=%08lx edx=%08lx\n> ",
+	index, eax, ebx, ecx, edx);
+      switch (ctype) {
+	case 1:
+	  printf("Data cache");
+	  break;
+	case 2:
+	  printf("Instruction cache");
+	  break;
+	case 3:
+	  printf("Unified cache");
+	  break;
+	default:
+	  printf("Unknown cache type (%lu)", ctype);
+      }
+      printf(", level %lu", (eax>>5)&7);
+      if (eax&0x100u)
+	printf(", self initializing");
+      if (eax&0x200u)
+	printf(", fully associative");
+      printf("\n");
+      sets = ecx+1;
+      ways = ((ebx>>22)&0x3ffu)+1;
+      partitions = ((ebx>>12)&0x3ffu)+1;
+      linesize = (ebx&0xfffu)+1;
+      printf("> %lu sets", sets);
+      printf(", %lu ways", ways);
+      printf(", %lu partitions", partitions);
+      printf(", line size %lu", linesize);
+      printf("\n> full size %lu bytes\n", sets*ways*partitions*linesize);
+      t = (eax>>14)&0xfffu;
+      if (t>0)
+	printf("> shared between up to %lu threads\n", t+1);
+      t = (eax>>26)&0x3fu;
+      if (index==0 && t>0)
+	printf("> NB this package has up to %lx threads\n", t+1);
+    }
+  }
+  if (maxi >= 7) {
+    unsigned i;
+    unsigned long eax, ebx, ecx, edx;
+    cpuidx(7, 0, eax, ebx, ecx, edx);
+    if (ebx != 0) {
+      printf("\nStructured feature flags CPUID.07H.00H:EBX: %08lx:\n",
+	ebx);
+      for(i=0;i<32;i++){
+	if(ebx & (1<<i)){
+	  const char* fn = Intel_struct_ext_feature_flags_7_0_b[i];
+	  if (fn != NULL)
+	    printf("%s\n", fn);
+	  else
+	    printf("%d - unknown feature\n", i);
+	}
+      }
+    }
   }
 }
 void printregs(int eax,int ebx,int ecx,int edx){
@@ -716,6 +801,9 @@ void decode_intel_tlb(int x){
   case 0x73:
     printf("Trace cache: 64K-micro-op, 8-way set assoc\n");
     break;
+  case 0x76:
+    printf("Instruction TLB: 2M/4M pages, fully associative, 8 entries\n");
+    break;
   case 0x78:
     printf("2nd-level cache: 1MB, 4-way set assoc, 64 byte line size\n");
     break;
@@ -823,6 +911,9 @@ void decode_intel_tlb(int x){
     break;
   case 0xF1:
     printf("128-byte prefetching\n");
+    break;
+  case 0xFF:
+    printf("CPUID leaf 2 does not report full information, query leaf 4\n");
     break;
    default:
     printf("unknown TLB/cache descriptor\n");
