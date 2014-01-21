@@ -146,7 +146,7 @@ char *Intel_feature_flags1[32] = {
   "HT     Hyper Threading",
   "TM     Thermal monitor",
   "30     reserved",
-  "31     Pending Break Enable"
+  "PBE    Pending Break Enable"
 };
 
 char *Intel_feature_flags2[32] = {
@@ -161,7 +161,7 @@ char *Intel_feature_flags2[32] = {
   "TM2      Thermal Monitor 2",
   "SSSE3    Supplemental Streaming SIMD Extension 3",
   "CNXT-ID  L1 Context ID",
-  NULL,
+  "11       reserved11",
   "FMA      Fused Multiply-Add",
   "CX16     CMPXCHG16B",
   "xTPR     Send Task Priority messages",
@@ -202,8 +202,11 @@ char *Intel_ext_feature_flags1[32] = {
 
 char *Intel_ext_feature_flags2[32] = {
   "LAHF      LAHF/SAHF available in IA-32e mode",
+  NULL, NULL, NULL, NULL,
+  "LZCNT",
+  NULL, NULL,
+  "PREFETCHW",
   NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
