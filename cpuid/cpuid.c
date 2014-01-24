@@ -417,7 +417,7 @@ void dointel(int maxi){
       int maxe = eax;
       if (maxe >= 0x80000001) {
 	unsigned long eax,ebx,ecx,edx;
-	cpuid(0x80000001,eax,ebx,ecx,edx);	
+	cpuid(0x80000001,eax,ebx,ecx,edx);
 	ext_feature_flags = edx;
 	ext_feature_flags2 = ecx;
       }
@@ -428,7 +428,7 @@ void dointel(int maxi){
 	for(i=0x80000002;i<=0x80000004;i++){
 	  unsigned long eax,ebx,ecx,edx;
 
-	  cpuid(i,eax,ebx,ecx,edx);	
+	  cpuid(i,eax,ebx,ecx,edx);
 	  printregs(eax,ebx,ecx,edx);
 	}
 	printf("\"\n");
@@ -436,10 +436,10 @@ void dointel(int maxi){
     }
     if(clf)
       printf("CLFLUSH instruction cache line size: %d\n",clf);
-    
+
     if(apic_id)
       printf("Initial APIC ID: %d\n",apic_id);
-    
+
     if(feature_flags & (1<<28)){
       printf("Hyper threading siblings: %d\n",siblings);
     }
@@ -506,7 +506,7 @@ void dointel(int maxi){
       decode_intel_tlb(eax >> 8);
       decode_intel_tlb(eax >> 16);
       decode_intel_tlb(eax >> 24);
-      
+
       if((ebx & 0x80000000) == 0){
 	decode_intel_tlb(ebx);
 	decode_intel_tlb(ebx >> 8);
@@ -622,7 +622,7 @@ void printregs(int eax,int ebx,int ecx,int edx){
   printf("%s",string);
 }
 
-      
+
 /* Decode Intel TLB and cache info descriptors */
 void decode_intel_tlb(int x){
   x &= 0xff;
@@ -1196,7 +1196,7 @@ void doamd(int maxi){
       printf("   Instruction TLB: associativity %ld-way #entries %ld\n",
 	     (eax >> 8) & 0xff,eax & 0xff);
     }
-    printf("4-KB Pages:\n");    
+    printf("4-KB Pages:\n");
     printf("   Data TLB: associativity %ld-way #entries %ld\n",
 	   (ebx >> 24) & 0xff,(ebx >> 16) & 0xff);
     printf("   Instruction TLB: associativity %ld-way #entries %ld\n",
@@ -1211,7 +1211,7 @@ void doamd(int maxi){
 	   edx >> 24,(edx>>16) & 0xff,(edx >> 8)&0xff,edx&0xff);
     printf("\n");
   }
-  
+
   /* check K6-III (and later?) on-chip L2 cache size */
   if (maxei >= 0x80000006) {
     unsigned long eax,ebx,ecx,unused;
@@ -1229,8 +1229,8 @@ void doamd(int maxi){
       assoc = (eax >> 16) & 0xff;
       printf("   Instruction TLB: associativity %s #entries %ld\n",
 	     Assoc[(eax >> 8) & 0xf],eax & 0xff);
-      
-      printf("4-KB Pages:\n");    
+
+      printf("4-KB Pages:\n");
       printf("   Data TLB: associativity %s #entries %ld\n",
 	     Assoc[(ebx >> 24) & 0xf],(ebx >> 16) & 0xff);
       printf("   Instruction TLB: associativity %s #entries %ld\n",
@@ -1453,7 +1453,7 @@ void docyrix(int maxi){
       decode_cyrix_tlb(eax >> 8);
       decode_cyrix_tlb(eax >> 16);
       decode_cyrix_tlb(eax >> 24);
-      
+
       /* ebx and ecx are reserved */
 
       if((edx & 0x80000000) == 0){
@@ -1526,7 +1526,7 @@ void docyrix(int maxi){
       decode_cyrix_tlb(ebx >> 8);
       decode_cyrix_tlb(ebx >> 16);
       decode_cyrix_tlb(ebx >> 24);
-      
+
       /* eax and edx are reserved */
 
       if((ecx & 0x80000000) == 0){
