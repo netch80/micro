@@ -8,7 +8,7 @@
  
  from Mailman import mm_cfg
  from Mailman import Errors
-@@ -48,6 +49,38 @@
+@@ -48,6 +49,40 @@
  
  MAX_CMDLINE = 3000
  
@@ -20,11 +20,13 @@
 +
 +## Prepare character map if no simple quoting is allowed.
 +qfs_map = {}
-+for c in [chr(x) for x in range(1, 256)]:
-+    if rec_regular.search(c):
-+        qfs_map[c] = c
++for _c in [chr(_x) for _x in range(1, 256)]:
++    if rec_regular.search(_c):
++        qfs_map[_c] = _c
 +    else:
-+        qfs_map[c] = '\\' + c
++        qfs_map[_c] = '\\' + _c
++del _x
++del _c
 +
 +
 +def quote_for_shell(arg):
@@ -47,7 +49,7 @@
  
  
  def process(mlist, msg, msgdata):
-@@ -68,27 +101,27 @@
+@@ -68,27 +103,27 @@
      # WARN: If you've read the warnings above and /still/ insist on using this
      # module, you must comment out the following line.  I still recommend you
      # don't do this!
