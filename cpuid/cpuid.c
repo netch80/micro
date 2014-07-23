@@ -161,7 +161,7 @@ char *Intel_feature_flags2[32] = {
   "TM2      Thermal Monitor 2",
   "SSSE3    Supplemental Streaming SIMD Extension 3",
   "CNXT-ID  L1 Context ID",
-  "11       reserved11",
+  "SDBG     IA32_DEBUG_INTERFACE MSR for silicon debug",
   "FMA      Fused Multiply-Add",
   "CX16     CMPXCHG16B",
   "xTPR     Send Task Priority messages",
@@ -782,6 +782,9 @@ void decode_intel_tlb(int x){
     break;
   case 0x60:
     printf("1st-level data cache: 16-KB, 8-way set associative, sectored cache, 64-byte line size\n");
+    break;
+  case 0x63:
+    printf("Data TLB: 1 GByte pages, 4-way set associative, 4 entries\n");
     break;
   case 0x66:
     printf("1st-level data cache: 8KB, 4-way set assoc, 64 byte line size\n");
