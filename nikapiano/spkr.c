@@ -89,7 +89,7 @@ speaker(const char *line)
     } else if(cmd == 'M' && subcmd == 0 && *line && strchr("NnLlSs", *line)) {
       subcmd = toupper(*line);
       ++line; continue;
-    } else if (!*line || strchr("AaBbCcDdEeFfGgOoNnLlPpTtMm<>", *line)) {
+    } else if (!*line || strchr("AaBbCcDdEeFfGgOoNnLlPpTtMm<>~", *line)) {
       // Execute previous command
       if (cmd != 0) {
         cmd = toupper(cmd);
@@ -121,7 +121,7 @@ speaker(const char *line)
           if (number > 0)
             len = number;
         }
-        else if (cmd == 'P') {
+        else if (cmd == 'P' || cmd == '~') {
           // Pause
           notelen = (number > 0) ? number : len;
           playNote(0, notelen, sustain, tempo, -1);
