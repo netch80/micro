@@ -119,7 +119,7 @@ cmdProbe(void)
   if (ioctl(snd_dev, SNDCTL_DSP_SPEED, &val) == 0) {
     printf("Current speed: %d\n", val);
   } else {
-    warn("ioctl(,SNDCTL_DSP_SPEED,0");
+    warn("ioctl(,SNDCTL_DSP_SPEED,0)");
   }
   // Test both standard value set and some "left" values
   doProbeSpeed(96000);
