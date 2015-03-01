@@ -1,6 +1,6 @@
 PROG=	nikapiano
-SRCS=	main.c spkr.c piano.c
-LDADD=	-lm
+SRCS=	main.c spkr.c piano.c alsa.c
+LDADD=	-lm -lasound
 DEBUG_FLAGS=-g -O0
 
 OBJS=$(patsubst %.c, %.o, $(SRCS))
