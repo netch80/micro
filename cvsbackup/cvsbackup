@@ -1009,7 +1009,7 @@ sub shellparseable {
 sub is_text_file {
   my $rf = shift;
   my $lf = shift;
-  ## Вначале проверить по маскам
+  ## First, test against patterns.
   my( $pp, $pt );
   for $pp ( @text_file_path_patterns ) {
     $pt = $pp->[1];
