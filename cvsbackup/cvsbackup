@@ -74,7 +74,7 @@ $difflines = 3;
 @text_file_path_patterns = ();
 $cm_cnt = 0;
 
-open( CONFIG, "< $config" ) or die "cannot open config file!";
+open( CONFIG, "<", $config ) or die "cannot open config file!";
 while( <CONFIG> ) {
   chomp;
   next if( /^$/ || /^\s*#/ );
@@ -345,7 +345,7 @@ sub pass1 {
       if( $dl1 >= 30 ) { print "file `$rfile' is binary, skipping diff\n"; }
     }
     else {
-      open( TEMP, "> $rfile" ) or die;
+      open( TEMP, ">", $rfile ) or die;
       close TEMP;
       if( $dl1 >= 30 ) { print "emptied file: $rfile\n"; }
     }
@@ -409,8 +409,8 @@ sub pass3 {
   }
   ## Run cvs update; get modified
   print "_: pass3(): calling cvs update\n" if $dl1 >= 20;
-  $cmd = sprintf( '%s update 2>&1 |', &shellparseable( $cvsbinpath ) );
-  open( UP, $cmd ) or die "cannot run cvs update";
+  $cmd = sprintf( '%s update 2>&1', &shellparseable( $cvsbinpath ) );
+  open( UP, "-|", $cmd ) or die "cannot run cvs update";
   @cla = ();
   while($l=<UP>) {
     chomp $l;
@@ -951,7 +951,7 @@ sub cvs_command {
   }
   $cmdline .= ' </dev/null';
   print "_: cvs_command(): send command: $cmdline\n" if( $dl1 >= 20 );
-  open( TEMP, "> $tmpf" ) and close( TEMP );
+  open( TEMP, ">", $tmpf ) and close( TEMP );
   $rc = system( $cmdline );
   if( $rc && !f_anyrc ) {
     print "cvs command `$cmdline' failed: rc=$rc\n";
