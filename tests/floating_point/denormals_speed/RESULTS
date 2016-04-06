@@ -55,3 +55,20 @@ implementations.
 
 
 NB1 running times aren't average, but a good single run is shown.
+
+NB2 weird asymmetry on FX-8150 with SSE:
+
+$ ./t 1 1e-308
+hard -> r=                             1 t=         1.404756000
+soft -> r=                             1 t=        14.412745400
+$ ./t 1 1e-310
+hard -> r=                             1 t=         1.153844700
+soft -> r=                             1 t=        14.449315800
+$ ./t 1e-308 1
+hard -> r=                             1 t=       143.248103200
+soft -> r=                             1 t=        13.989606900
+$ ./t 1e-310 1
+hard -> r=                             1 t=       143.036264200
+soft -> r=                             1 t=        13.825458400
+
+It's not commutative in sense of spent time.
