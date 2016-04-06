@@ -1,0 +1,57 @@
+On Intel SandyBridge (Pentium G860), FreeBSD/amd64:
+
+Use SSE:
+
+$ gmake -B
+$ ./t 1e-312 -1e-314
+hard -> r=9.899999999988265339684249e-313 t=         0.672129500
+soft -> r=9.899999999988265339684249e-313 t=        23.708472700
+
+Switch to FPU:
+
+$ gmake -B USE_FPU=1
+$ ./t 1e-312 -1e-314
+hard -> r=9.899999999988265339684249e-313 t=       299.672679000
+soft -> r=9.899999999988265339684249e-313 t=       218.393504900
+
+But, if avoid copying doubles with FPU and force them to memory copy:
+
+$ gmake -B USE_FPU=1 USE_MEMCOPY=1
+$ ./t 1e-312 -1e-314
+hard -> r=9.899999999988265339684249e-313 t=       302.676322200
+soft -> r=9.899999999988265339684249e-313 t=        24.298869500
+
+so, with this architecture, denormals aren't mishandled with SSE, unlike FPU.
+
+On AMD FX-8150, Linux/x86_64:
+
+Use SSE:
+
+$ make -B
+$ ./t 1e-312 -1e-314
+hard -> r=9.899999999988265339684249e-313 t=       188.634769600
+soft -> r=9.899999999988265339684249e-313 t=        21.602194600
+
+$ make -B USE_FPU=1
+$ ./t 1e-312 -1e-314
+hard -> r=9.899999999988265339684249e-313 t=         1.641850600
+soft -> r=9.899999999988265339684249e-313 t=        21.789981900
+
+Memory copying doesn't change anything:
+
+$ make -B USE_FPU=1 USE_MEMCOPY=1
+$ ./t 1e-312 -1e-314
+hard -> r=9.899999999988265339684249e-313 t=         1.105824200
+soft -> r=9.899999999988265339684249e-313 t=        21.835485600
+
+So, this is opposite to Intel - FPU is good but SSE isn't.
+
+All t= values are nanoseconds per cycle with 1 floating operation.
+
+Conclusion: there is nothing _really_ problematic in fast denormals
+support, there is only leisure and/or damaged design; and, this is
+being started to fix. Let's hope this will be fixed soon in all
+implementations.
+
+
+NB1 running times aren't average, but a good single run is shown.
