@@ -209,4 +209,9 @@ void writeFrames(const uint16_t *wt, size_t wtsize)
   }
 }
 
+void drain()
+{
+  // NOP
+}
+
 // vim:ts=2:sts=2:sw=2:et:si:

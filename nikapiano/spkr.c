@@ -165,6 +165,7 @@ cmdSpkr(int argc, char *argv[])
   initDevice();
   for (i = 0; i < argc; ++i)
     speaker(argv[i]);
+  drain();
   return 0;
 }
 
@@ -183,6 +184,7 @@ cmdSpkrI(int argc, char *argv[])
     warn("fgets");
     return 1;
   }
+  drain();
   return 0;
 }
 
