@@ -50,7 +50,7 @@ beep(double sfreq, int slen)
     const double pi = 3.14159265358979;
     wtsize = (int)(0.5 + snd_dev_speed*(slen/1000.0));
     if (f_verbose) {
-      printf("beep(): sfreq=%g slen=%d snd_dev_speed=%d wtsize=%d\r\n",
+      printf("beep(): sfreq=%g slen=%d snd_dev_speed=%d wtsize=%zd\r\n",
           sfreq, slen, snd_dev_speed, wtsize);
     }
     wt = alloca(sizeof(uint16_t) * wtsize);

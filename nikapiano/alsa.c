@@ -167,15 +167,25 @@ void writeFrames(const uint16_t *wt, size_t wtsize)
   const char* buf = (const char*) wt;
   size_t pos, rest;
   ssize_t written;
+  int rc;
   pos = 0;
   rest = wtsize;
   while (rest > 0) {
     written = snd_pcm_writei(pcm, &buf[pos], rest);
-    if (written <= 0)
-      err(1, "write");
+    if (written < 0) {
+      errno = -written;
+      err(1, "snd_pcm_writei");
+    }
     pos += written;
     rest -= written;
   }
+}
+
+void drain()
+{
+  int rc = snd_pcm_drain(pcm);
+  if (rc < 0)
+    errx(1, "snd_pcm_drain");
 }
 
 // vim:ts=2:sts=2:sw=2:et:si:
