@@ -60,11 +60,56 @@ char *Brands[MAXBRANDS] = {
 #define cpuidx(in,in2,a,b,c,d)\
   asm("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in), "c" (in2));
 
+void check_cpuid_support(void) {
+#if defined(__GNUCLIKE_ASM)
+  unsigned r;
+#if defined(__x86_64)
+  asm volatile (
+    "pushfq" "\n\t"
+    "pop %%rax" "\n\t"
+    "mov %%rax, %%rbx" "\n\t"
+    "xor $0x20000, %%rax" "\n\t"
+    "push %%rax" "\n\t"
+    "popfq" "\n\t"
+    "pushfq" "\n\t"
+    "pop %%rax" "\n\t"
+    "xor %%rbx, %%rbx" "\n\t"
+    "cmp %%rax, %%rcx" "\n\t"
+    "setne %%bl" "\n\t"
+    "push %%rcx" "\n\t"
+    "popfq"
+    : "=b" (r) : : "eax", "ecx", "cc" );
+#else
+  asm volatile (
+    "pushfd" "\n\t"
+    "popl %%eax" "\n\t"
+    "mov %%eax, %%ebx" "\n\t"
+    "xor $0x20000, %%eax" "\n\t"
+    "pushl %%eax" "\n\t"
+    "popfd" "\n\t"
+    "pushfd" "\n\t"
+    "popl %%eax" "\n\t"
+    "xor %%ebx, %%ebx" "\n\t"
+    "cmp %%eax, %%ecx" "\n\t"
+    "setne %%bl" "\n\t"
+    "pushl %%ecx" "\n\t"
+    "popfd"
+    : "=b" (r) : : "eax", "ecx", "cc" );
+#endif
+  if (!r) {
+    fprintf(stderr, "Fatal: the CPU does not allow CPUID\n");
+    exit(1);
+  }
+#else
+  printf("Warning: CPUID detection presence missed, program may fail\n");
+#endif
+}
+
 int main(){
   int i;
   unsigned long li,maxi,maxei,ebx,ecx,edx,unused;
 
-  /* Insert code here to test if CPUID instruction is available */
+  check_cpuid_support();
 
   /* Dump all the CPUID results in raw hex */
   cpuid(0,maxi,unused,unused,unused);
