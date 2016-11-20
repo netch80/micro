@@ -222,6 +222,7 @@ main(int argc, char *argv[])
   const char *mode = NULL;
   int opt;
 
+  char **argv0 = argv;
   while ((opt = getopt_long(argc, argv, "d:W;", myoptions, NULL)) != -1)
   {
     switch (opt) {
@@ -250,8 +251,11 @@ main(int argc, char *argv[])
   }
   argc -= optind;
   argv += optind;
-  if (argc <= 0)
-    errx(1, "usage: no working mode");
+  if (argc <= 0) {
+    fprintf(stderr, "%s: fatal: no working mode\n", argv0[0]);
+    fprintf(stderr, "Call <%s help> for a short help page\n", argv0[0]);
+    exit(1);
+  }
   mode = argv[0];
   --argc; ++argv;
 

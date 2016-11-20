@@ -24,6 +24,7 @@ void drain();
 int setSpeed(int speed, int *rcp, int *newspeedp);
 int beep(double sfreq, int slen);
 int beepnote(int notenum, int slen);
+int cmdProbe();
 int cmdSpkr(int argc, char *argv[]);
 int cmdSpkrI(int argc, char *argv[]);
 int cmdPiano(void);
