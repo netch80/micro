@@ -1,0 +1,4 @@
+gethostbyname a.root-servers.org if_another 72.13.63.55
+gethostbyname 4.193.193.193.cbl.abuseat.org if_any
+gethostbyname 4.193.193.193.dnsbl.njabl.org if_any_common 127.0.0.2 127.0.0.9
+gethostbyname 4.193.193.193.dnsbl.sorbs.net if_any_common 127.0.0.2 127.0.0.3 127.0.0.5
