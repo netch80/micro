@@ -1,6 +1,11 @@
 // Speaker line parser.
 // See https://www.freebsd.org/cgi/man.cgi?query=speaker&sektion=4&manpath=FreeBSD+5.1-release
 // for reference. Some minor features could be omitted.
+// Sustain (".") is interpreted according to note book rules, i.e.
+// adding half of rest to doubled initial length.
+
+#include "spkr.hxx"
+#include "defs.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -9,8 +14,6 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <err.h>
-
-#include "defs.h"
 
 #define ARTICULATION_PAUSE      (-1)
 #define ARTICULATION_NORMAL     0
@@ -53,24 +56,16 @@ playNote(int notenum, int notelen, int sustain, int tempo, int articulation)
 }
 
 void
-speaker(const char *line)
+Speaker::speak(const char *line)
 {
   const int MIN_OCTAVE = 0;
   const int MAX_OCTAVE = 6;
 
-  int octave, octave_tracking, len, tempo, articulation;
   int cmd, subcmd, number, acci, sustain, legato1;
   int notenum, notelen, a1;
-  int previous_note_index;
   static const int noteidx[7] = { 9, 11, 0, 2, 4, 5, 7 };
   // Global player values.
   //printf("_: speaker(<%s>)\n", line);
-  octave = 4;
-  len = 4;
-  tempo = 120;
-  articulation = 0;     // normal
-  octave_tracking = 0;
-  previous_note_index = noteidx[0];
   // One command parameters.
   cmd = subcmd = number = acci = sustain = legato1 = 0;
   // Begin.
@@ -111,25 +106,25 @@ speaker(const char *line)
           // Play note
           // TODO add octave tracking
           int curr_idx = noteidx[cmd-'A'];
-          if (octave_tracking && previous_note_index >= 0) {
-            int idx_diff = curr_idx - previous_note_index;
-            if (idx_diff < -6 && octave < MAX_OCTAVE) {
-              ++octave;
+          if (mOctaveTracking && mPreviousNoteIndex >= 0) {
+            int idx_diff = curr_idx - mPreviousNoteIndex;
+            if (idx_diff < -6 && mOctave < MAX_OCTAVE) {
+              ++mOctave;
             }
-            else if (idx_diff > 6 && octave > MIN_OCTAVE) {
-              --octave;
+            else if (idx_diff > 6 && mOctave > MIN_OCTAVE) {
+              --mOctave;
             }
           }
-          notenum = octave * 12 + curr_idx + acci + 1;
+          notenum = mOctave * 12 + curr_idx + acci + 1;
           //printf("_: playing note %d\n", notenum);
-          notelen = (number > 0) ? number : len;
-          a1 = legato1 ? ARTICULATION_LEGATO : articulation;
-          playNote(notenum, notelen, sustain, tempo, a1);
-          previous_note_index = curr_idx;
+          notelen = (number > 0) ? number : mLen;
+          a1 = legato1 ? ARTICULATION_LEGATO : mArticulation;
+          playNote(notenum, notelen, sustain, mTempo, a1);
+          mPreviousNoteIndex = curr_idx;
         }
         else if (cmd == 'O') {
           if (subcmd != 0) {
-            octave_tracking = (subcmd == 'L');
+            mOctaveTracking = (subcmd == 'L');
           } else {
             if (number < MIN_OCTAVE) {
               number = MIN_OCTAVE;
@@ -137,32 +132,33 @@ speaker(const char *line)
             if (number > MAX_OCTAVE) {
               number = MAX_OCTAVE;
             }
-            octave = number;
-            previous_note_index = -1;
+            mOctave = number;
+            mPreviousNoteIndex = -1;
           }
         }
         else if (cmd == '>') {
-          ++octave;
-          previous_note_index = -1;
+          ++mOctave;
+          mPreviousNoteIndex = -1;
         }
         else if (cmd == '<') {
-          --octave;
-          previous_note_index = -1;
+          --mOctave;
+          mPreviousNoteIndex = -1;
         }
         else if (cmd == 'N') {
           notenum = number;
-          notelen = len;
-          a1 = legato1 ? ARTICULATION_LEGATO : articulation;
-          playNote(notenum, notelen, sustain, tempo, a1);
+          notelen = mLen;
+          a1 = legato1 ? ARTICULATION_LEGATO : mArticulation;
+          playNote(notenum, notelen, sustain, mTempo, a1);
         }
         else if (cmd == 'L') {
-          if (number > 0)
-            len = number;
+          if (number > 0) {
+            mLen = number;
+          }
         }
         else if (cmd == 'P' || cmd == '~') {
           // Pause
-          notelen = (number > 0) ? number : len;
-          playNote(0, notelen, sustain, tempo, -1);
+          notelen = (number > 0) ? number : mLen;
+          playNote(0, notelen, sustain, mTempo, -1);
         }
         else if (cmd == 'T') {
           if (number < 10) {
@@ -171,15 +167,15 @@ speaker(const char *line)
           if (number > 300) {
             number = 300;
           }
-          tempo = number;
+          mTempo = number;
         }
         else if (cmd == 'M') {
           if (subcmd == 'L')
-            articulation = ARTICULATION_LEGATO;
+            mArticulation = ARTICULATION_LEGATO;
           else if (subcmd == 'S')
-            articulation = ARTICULATION_STACCATO;
+            mArticulation = ARTICULATION_STACCATO;
           else
-            articulation = ARTICULATION_NORMAL;
+            mArticulation = ARTICULATION_NORMAL;
         }
       }
       // Clear after previous
@@ -206,8 +202,10 @@ cmdSpkr(int argc, char *argv[])
   if( argc < 1 )
     errx(1, "usage: spkr <line>");
   initDevice();
-  for (i = 0; i < argc; ++i)
-    speaker(argv[i]);
+  Speaker speaker;
+  for (i = 0; i < argc; ++i) {
+    speaker.speak(argv[i]);
+  }
   drain();
   return 0;
 }
@@ -221,9 +219,10 @@ cmdSpkrI(int argc, char *argv[])
   char line[256];
   initDevice();
   // Retry input
+  Speaker speaker;
   while (fgets(line, sizeof(line)-1, stdin)) {
     line[sizeof(line)-1] = 0;
-    speaker(line);
+    speaker.speak(line);
   }
   if (ferror(stdin)) {
     warn("fgets");
