@@ -1,3 +1,7 @@
+#include "defs.h"
+
+#include <vector>
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -5,8 +9,6 @@
 #include <string.h>
 #include <getopt.h>
 #include <err.h>
-
-#include "defs.h"
 
 int target;
 
@@ -41,8 +43,8 @@ int
 beep(double sfreq, int slen)
 {
   // Needed arguments: frequency (in Hz) and length (in milliseconds)
-  uint16_t *wt;
-  size_t wtsize;
+  std::vector<uint16_t> wt;
+  size_t wtsize = 0;
 
   // Generate wave table. We know speed and frequency.
   ;{
@@ -53,9 +55,7 @@ beep(double sfreq, int slen)
       printf("beep(): sfreq=%g slen=%d snd_dev_speed=%d wtsize=%zd\r\n",
           sfreq, slen, snd_dev_speed, wtsize);
     }
-    wt = (uint16_t*) alloca(sizeof(uint16_t) * wtsize);
-    if( !wt )
-      err(1, "alloca");
+    wt.reserve(wtsize);
     for( i = 0; i < wtsize; ++i ) {
       double r1 = (2*pi*sfreq*i)/snd_dev_speed;
       double s = 240 * volume * sin(r1);
@@ -69,7 +69,7 @@ beep(double sfreq, int slen)
   if (target == TARGET_FILE)
     fflush(ofile);
 
-  writeFrames(wt, wtsize);
+  writeFrames(&wt[0], wtsize);
 
   return 0;
 }
@@ -103,7 +103,11 @@ cmdBeep(int argc, char *argv[])
 
   initDevice();
 
-  return beep(sfreq, slen);
+  int rc = beep(sfreq, slen);
+  if (rc == 0) {
+    drain();
+  }
+  return rc;
 }
 
 double note_table[108] = {
@@ -180,7 +184,11 @@ cmdBeepNote(int argc, char *argv[])
   initDevice();
   initNoteTable();
   sfreq = note_table[note-1];
-  return beep(sfreq, slen);
+  int rc = beep(sfreq, slen);
+  if (rc == 0) {
+    drain();
+  }
+  return rc;
 }
 
 int
