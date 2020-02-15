@@ -1,3 +1,7 @@
+// Speaker line parser.
+// See https://www.freebsd.org/cgi/man.cgi?query=speaker&sektion=4&manpath=FreeBSD+5.1-release
+// for reference. Some minor features could be omitted.
+
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,9 +55,13 @@ playNote(int notenum, int notelen, int sustain, int tempo, int articulation)
 void
 speaker(const char *line)
 {
-  int octave, len, tempo, articulation;
+  const int MIN_OCTAVE = 0;
+  const int MAX_OCTAVE = 6;
+
+  int octave, octave_tracking, len, tempo, articulation;
   int cmd, subcmd, number, acci, sustain, legato1;
   int notenum, notelen, a1;
+  int previous_note_index;
   static const int noteidx[7] = { 9, 11, 0, 2, 4, 5, 7 };
   // Global player values.
   //printf("_: speaker(<%s>)\n", line);
@@ -61,6 +69,8 @@ speaker(const char *line)
   len = 4;
   tempo = 120;
   articulation = 0;     // normal
+  octave_tracking = 0;
+  previous_note_index = noteidx[0];
   // One command parameters.
   cmd = subcmd = number = acci = sustain = legato1 = 0;
   // Begin.
@@ -70,6 +80,7 @@ speaker(const char *line)
     if (*line && strchr(" \t\r\n\v\f", *line)) {
       ++line; continue;
     } else if (*line >= 48 && *line <= 57) {
+      // Full number, allow strtol to parse it and go to next position
       char *newpos;
       number = (int) strtol(line, &newpos, 10);
       line = newpos;
@@ -89,6 +100,8 @@ speaker(const char *line)
     } else if(cmd == 'M' && subcmd == 0 && *line && strchr("NnLlSs", *line)) {
       subcmd = toupper(*line);
       ++line; continue;
+    } else if (cmd == 'O' && subcmd == 0 && *line && strchr("LlNn", *line)) {
+      subcmd = toupper(*line);
     } else if (!*line || strchr("AaBbCcDdEeFfGgOoNnLlPpTtMm<>~", *line)) {
       // Execute previous command
       if (cmd != 0) {
@@ -96,20 +109,45 @@ speaker(const char *line)
         //printf("_: executing cmd %C\n", cmd);
         if (cmd >= 'A' && cmd <= 'G') {
           // Play note
-          notenum = octave * 12 + noteidx[cmd-'A'] + acci + 1;
+          // TODO add octave tracking
+          int curr_idx = noteidx[cmd-'A'];
+          if (octave_tracking && previous_note_index >= 0) {
+            int idx_diff = curr_idx - previous_note_index;
+            if (idx_diff < -6 && octave < MAX_OCTAVE) {
+              ++octave;
+            }
+            else if (idx_diff > 6 && octave > MIN_OCTAVE) {
+              --octave;
+            }
+          }
+          notenum = octave * 12 + curr_idx + acci + 1;
           //printf("_: playing note %d\n", notenum);
           notelen = (number > 0) ? number : len;
           a1 = legato1 ? ARTICULATION_LEGATO : articulation;
           playNote(notenum, notelen, sustain, tempo, a1);
+          previous_note_index = curr_idx;
         }
         else if (cmd == 'O') {
-          octave = number;
+          if (subcmd != 0) {
+            octave_tracking = (subcmd == 'L');
+          } else {
+            if (number < MIN_OCTAVE) {
+              number = MIN_OCTAVE;
+            }
+            if (number > MAX_OCTAVE) {
+              number = MAX_OCTAVE;
+            }
+            octave = number;
+            previous_note_index = -1;
+          }
         }
         else if (cmd == '>') {
           ++octave;
+          previous_note_index = -1;
         }
         else if (cmd == '<') {
           --octave;
+          previous_note_index = -1;
         }
         else if (cmd == 'N') {
           notenum = number;
@@ -127,8 +165,13 @@ speaker(const char *line)
           playNote(0, notelen, sustain, tempo, -1);
         }
         else if (cmd == 'T') {
-          if (number >= 10 && number <= 300)
-            tempo = number;
+          if (number < 10) {
+            number = 10;
+          }
+          if (number > 300) {
+            number = 300;
+          }
+          tempo = number;
         }
         else if (cmd == 'M') {
           if (subcmd == 'L')
@@ -173,6 +216,8 @@ cmdSpkr(int argc, char *argv[])
 int
 cmdSpkrI(int argc, char *argv[])
 {
+  (void) argc;
+  (void) argv;
   char line[256];
   initDevice();
   // Retry input

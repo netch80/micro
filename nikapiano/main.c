@@ -46,7 +46,7 @@ beep(double sfreq, int slen)
 
   // Generate wave table. We know speed and frequency.
   ;{
-    int i;
+    unsigned i;
     const double pi = 3.14159265358979;
     wtsize = (int)(0.5 + snd_dev_speed*(slen/1000.0));
     if (f_verbose) {
@@ -141,6 +141,8 @@ initNoteTable(void)
 int
 cmdTable(int argc, char *argv[])
 {
+  (void) argc;
+  (void) argv;
   int i, j, octave;
   static const char* octave_names[] = {
     "SC", "C", "M", "m", "1", "2", "3", "4", "5"

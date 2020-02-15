@@ -21,7 +21,7 @@ void initDevice(void);
 void doProbeSpeed(int speed);
 void writeFrames(const uint16_t *buf, size_t nframes);
 void drain();
-int setSpeed(int speed, int *rcp, int *newspeedp);
+int setSpeed(unsigned speed, int *rcp, int *newspeedp);
 int beep(double sfreq, int slen);
 int beepnote(int notenum, int slen);
 int cmdProbe();
