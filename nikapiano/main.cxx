@@ -53,7 +53,7 @@ beep(double sfreq, int slen)
       printf("beep(): sfreq=%g slen=%d snd_dev_speed=%d wtsize=%zd\r\n",
           sfreq, slen, snd_dev_speed, wtsize);
     }
-    wt = alloca(sizeof(uint16_t) * wtsize);
+    wt = (uint16_t*) alloca(sizeof(uint16_t) * wtsize);
     if( !wt )
       err(1, "alloca");
     for( i = 0; i < wtsize; ++i ) {

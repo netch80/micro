@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum target { TARGET_DEVICE, TARGET_FILE };
 
 extern int target;
@@ -28,6 +32,10 @@ int cmdProbe();
 int cmdSpkr(int argc, char *argv[]);
 int cmdSpkrI(int argc, char *argv[]);
 int cmdPiano(void);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif
 
