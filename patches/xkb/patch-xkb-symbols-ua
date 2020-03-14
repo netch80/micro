@@ -1,0 +1,22 @@
+--- ua.dist	2018-02-02 13:47:00.000000000 +0200
++++ ua	2018-09-23 00:10:32.489973931 +0300
+@@ -12,7 +12,7 @@
+     include "ua(winkeys)"
+     name[Group1]= "Ukrainian";
+ 
+-    key <TLDE> { [      apostrophe,           U02BC,          U0301,          asciitilde  ] };  // Apostrophe and Stress symbol
++    key <TLDE> { [          U02BC,       apostrophe,          U0301,          asciitilde  ] };  // Apostrophe and Stress symbol
+     key <AE01> { [               1,          exclam,    onesuperior                       ] };
+     key <AE02> { [               2,        quotedbl,    twosuperior,               U2019  ] };  // single quote used often as an apostrophe (deprecated)
+     key <AE03> { [               3,      numerosign,          U00A7,               U20B4  ] };  // Paragraph and Hryvnia sign
+@@ -73,8 +73,8 @@
+     key <AD08> { [    Cyrillic_sha,    Cyrillic_SHA  ] };
+     key <AD09> { [  Cyrillic_shcha,  Cyrillic_SHCHA  ] };
+     key <AD10> { [     Cyrillic_ze,     Cyrillic_ZE  ] };
+-    key <AD11> { [     Cyrillic_ha,     Cyrillic_HA  ] };
+-    key <AD12> { [    Ukrainian_yi,    Ukrainian_YI  ] };
++    key <AD11> { [     Cyrillic_ha,     Cyrillic_HA, U201A, U201E  ] };
++    key <AD12> { [    Ukrainian_yi,    Ukrainian_YI, U2018, U201A  ] };
+     key <BKSL> { [ Ukrainian_ghe_with_upturn, Ukrainian_GHE_WITH_UPTURN ] };
+ 
+     key <AC01> { [     Cyrillic_ef,     Cyrillic_EF  ] };

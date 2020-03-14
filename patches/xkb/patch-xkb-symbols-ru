@@ -1,0 +1,65 @@
+--- ru.dist	2018-02-02 13:47:00.000000000 +0200
++++ ru	2019-05-27 19:31:18.948311253 +0300
+@@ -18,7 +18,7 @@
+     key <AE08> { [           8,    asterisk, U20BD  ] };
+ 
+     key <AB10> { [      period,       comma  ] };
+-    key <BKSL> { [   backslash,       slash  ] };
++    key <BKSL> { [       slash,         bar, backslash  ] };
+ };
+ 
+ hidden partial alphanumeric_keys
+@@ -41,7 +41,7 @@
+     key <AB10> { [       slash,    question  ] };
+     key <LSGT> { [       slash,         bar  ] };
+ 
+-    key <TLDE> { [       Cyrillic_io,       Cyrillic_IO  ] };
++    key <TLDE> { [       Cyrillic_io,       Cyrillic_IO, U02BD, U0300  ] };
+     key <AD01> { [   Cyrillic_shorti,   Cyrillic_SHORTI  ] };
+     key <AD02> { [      Cyrillic_tse,      Cyrillic_TSE  ] };
+     key <AD03> { [        Cyrillic_u,        Cyrillic_U  ] };
+@@ -52,8 +52,8 @@
+     key <AD08> { [      Cyrillic_sha,      Cyrillic_SHA  ] };
+     key <AD09> { [    Cyrillic_shcha,    Cyrillic_SHCHA  ] };
+     key <AD10> { [       Cyrillic_ze,       Cyrillic_ZE  ] };
+-    key <AD11> { [       Cyrillic_ha,       Cyrillic_HA  ] };
+-    key <AD12> { [ Cyrillic_hardsign, Cyrillic_HARDSIGN  ] };
++    key <AD11> { [       Cyrillic_ha,       Cyrillic_HA, U201A, U201E  ] };
++    key <AD12> { [ Cyrillic_hardsign, Cyrillic_HARDSIGN, U2018, U201C  ] };
+ 
+     key <AC01> { [       Cyrillic_ef,       Cyrillic_EF  ] };
+     key <AC02> { [     Cyrillic_yeru,     Cyrillic_YERU  ] };
+@@ -65,7 +65,7 @@
+     key <AC08> { [       Cyrillic_el,       Cyrillic_EL  ] };
+     key <AC09> { [       Cyrillic_de,       Cyrillic_DE  ] };
+     key <AC10> { [      Cyrillic_zhe,      Cyrillic_ZHE  ] };
+-    key <AC11> { [        Cyrillic_e,        Cyrillic_E  ] };
++    key <AC11> { [        Cyrillic_e,        Cyrillic_E, U02BC, U0301  ] };
+ 
+     key <AB01> { [       Cyrillic_ya,       Cyrillic_YA  ] };
+     key <AB02> { [      Cyrillic_che,      Cyrillic_CHE  ] };
+@@ -78,6 +78,7 @@
+     key <AB09> { [       Cyrillic_yu,       Cyrillic_YU  ] };
+ 
+     include "kpdl(comma)"
++    include "level3(ralt_switch)"
+ };
+ 
+ partial alphanumeric_keys
+@@ -791,7 +792,7 @@
+     include "ru(common)"
+     name[Group1]= "Russian (with Ukrainian-Belorussian layout)";
+ 
+-    key <TLDE> { [  U2019,  apostrophe,         U0301,  asciitilde  ] };  // Apostrophe and Stress symbol
++    key <TLDE> { [  U02BC,  apostrophe,         U0301,  asciitilde  ] };  // Apostrophe and Stress symbol
+     key <AE01> { [      1,      exclam,         U00F7,       U2248  ] };  // Division Sign and Almost Equal To
+     key <AE02> { [      2,    quotedbl,      currency,    infinity  ] };
+     key <AE03> { [      3,  numerosign,         U00A7,       U20B4  ] };  // Paragraph and Hryvnia sign
+@@ -810,6 +811,7 @@
+     key <AD05> { [       Cyrillic_ie,       Cyrillic_IE,   Cyrillic_io,          Cyrillic_IO  ] };
+     key <AD07> { [      Cyrillic_ghe,      Cyrillic_GHE, Ukrainian_ghe_with_upturn, Ukrainian_GHE_WITH_UPTURN ] };
+     key <AD10> { [       Cyrillic_ze,       Cyrillic_ZE,         U00B6                        ] };  // Pilcrow Sign
++    key <AD11> { [       Cyrillic_ha,      Cyrillic_HA,  U0493, U0492 ] };
+     key <AD12> { [ Cyrillic_hardsign, Cyrillic_HARDSIGN,  Ukrainian_yi,         Ukrainian_YI  ] };
+ 
+     key <AC02> { [     Cyrillic_yeru,     Cyrillic_YERU,   Ukrainian_i,          Ukrainian_I  ] };
