@@ -1,0 +1,10 @@
+Goal: closures by bind() vs. closures by lambda.
+
+test.cxx:
+
+No options or with USE_LAMBDA_A: one copy, two moves.
+
+With USE_LAMBDA: three copies.
+
+With USE_LAMBDA_R or with USE_BIND_REF: only by reference (incorrect
+in this code example).
