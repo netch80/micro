@@ -1,0 +1,121 @@
+https://stackoverflow.com/a/66265727/
+
+=== cut ===
+Not an answer at the level of the language standard, but some evidence that in practice, the answer can be "two".  And as I guessed in the question, this can happen even if the RMW is `seq_cst`.
+
+I haven't been able to observe stores being reordered as in the original question, but here is an example that shows the store of an atomic `seq_cst` RMW being reordered with a following `relaxed` load.
+
+The program below is an implementation of Peterson's algorithm adapted from LWimsey's example in https://stackoverflow.com/questions/41858540/whats-are-practical-example-where-acquire-release-memory-order-differs-from-seq.  As explained there, the correct version of the algorithm involves
+``` C++
+me.store(true, std::memory_order_seq_cst);
+if (other.load(std::memory_order_seq_cst) == false) 
+    // lock taken
+```
+where it is essential that the load become visible after the store.  
+
+If RMW were a single operation for the purposes of ordering semantics, we would expect that it would be safe to do
+``` C++
+me.exchange(true, std::memory_order_seq_cst);
+if (other.load(std::memory_order_relaxed) == false) {
+    // Ensure critical section doesn't start until we know we have the lock
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    // lock taken
+}
+```
+on the theory that since the exchange operation has acquire semantics, the load must become visible after the exchange has completed, and in particular after the store of `true` to `me` has become visible.
+
+But in fact on ARMv8-a, using either gcc or clang, such code frequently fails.  It appears that in fact, `exchange` does consist of an acquire-load and a release-store, and that `other.load` may become visible before the release-store.  (Though not before the acquire-load of the `exchange`, but that is irrelevant here.)
+
+clang generates code like the following:
+```
+mov w11, #1
+retry:
+ldaxrb wzr, [me]
+stlxrb w12, w11, [me]
+cbnz w12, retry
+ldrb w11, [other]
+```
+See https://godbolt.org/z/fhjjn7, lines 116-120 of the assembly output.  (gcc is the same but buried inside a library function.)  By ARM64 memory ordering semantics, the release-store `stlxrb` can be reordered with following loads and stores.  The fact that it's exclusive doesn't change that.
+
+To make the reordering happen more often, we arrange for the data being stored to depend on a previous load that missed cache, which we ensure by evicting that line with `dc civac`.  We also need to put the two flags `me` and `other` on separate cache lines.  Otherwise, as I understand it, even if thread A does its load before the store, then thread B has to wait to begin its RMW until after A's store completes, and in particular won't do its load until A's store is visible.
+
+On a multi-core Cortex A72 (Raspberry Pi 4B), the assertion typically fails after a few thousand iterations, which is nearly instantaneous.  
+
+The code needs to be built with `-O2`.  I suspect it will not work if built for ARMv8.2 or higher, where `swpalb` is available.
+
+``` C++
+// Based on https://stackoverflow.com/a/41859912/634919 by LWimsey
+#include <thread>
+#include <atomic>
+#include <cassert>
+
+// size that's at least as big as a cache line
+constexpr size_t cache_line_size = 256;
+
+static void take_lock(std::atomic<bool> &me, std::atomic<bool> &other) {
+    alignas(cache_line_size) bool uncached_true = true;
+    for (;;) {
+        // Evict uncached_true from cache.
+        asm volatile("dc civac, %0" : : "r" (&uncached_true) : "memory");
+        
+        // So the release store to `me` may be delayed while
+        // `uncached_true` is loaded.  This should give the machine
+        // time to proceed with the load of `other`, which is not
+        // forbidden by the release semantics of the store to `me`.
+        
+        me.exchange(uncached_true, std::memory_order_seq_cst);
+        if (other.load(std::memory_order_relaxed) == false) {
+            // taken!
+            std::atomic_thread_fence(std::memory_order_seq_cst);
+            return;
+        }
+        // start over
+        me.store(false, std::memory_order_seq_cst);
+    }
+}
+
+static void drop_lock(std::atomic<bool> &me) {
+    me.store(false, std::memory_order_seq_cst);
+}
+
+alignas(cache_line_size) std::atomic<int> counter{0};
+
+static void critical_section(void) {
+    // We should be the only thread inside here.
+    int tmp = counter.fetch_add(1, std::memory_order_seq_cst);
+    assert(tmp == 0);
+    
+    // Delay to give the other thread a chance to try the lock
+    for (int i = 0; i < 100; i++)
+        asm volatile("");
+    
+    tmp = counter.fetch_sub(1, std::memory_order_seq_cst);
+    assert(tmp == 1);
+}    
+
+static void busy(std::atomic<bool> *me, std::atomic<bool> *other)
+{
+    for (;;) {  
+        take_lock(*me, *other);
+        std::atomic_thread_fence(std::memory_order_seq_cst); // paranoia
+        critical_section();
+        std::atomic_thread_fence(std::memory_order_seq_cst); // paranoia
+        drop_lock(*me);
+    }
+}
+
+
+// The two flags need to be on separate cache lines.
+alignas(cache_line_size) std::atomic<bool> flag1{false}, flag2{false};
+
+int main()
+{
+    std::thread t1(busy, &flag1, &flag2);
+    std::thread t2(busy, &flag2, &flag1);
+    
+    t1.join(); // will never happen
+    t2.join();
+    return 0;
+}
+```
+=== end cut ===
