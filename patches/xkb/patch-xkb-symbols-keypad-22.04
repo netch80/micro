@@ -1,0 +1,40 @@
+--- keypad.dist	2018-02-02 13:47:00.000000000 +0200
++++ keypad	2019-01-04 11:11:53.540411861 +0200
+@@ -3,23 +3,23 @@
+ 
+     include "keypad(operators)"
+ 
+-    key  <KP7> {	[  KP_Home,	KP_7	]	};
+-    key  <KP8> {	[  KP_Up,	KP_8	]	};
+-    key  <KP9> {	[  KP_Prior,	KP_9	]	};
+-
+-    key  <KP4> {	[  KP_Left,	KP_4	]	};
+-    key  <KP5> {	[  KP_Begin,	KP_5	]	};
+-    key  <KP6> {	[  KP_Right,	KP_6	]	};
+-
+-    key  <KP1> {	[  KP_End,	KP_1	]	};
+-    key  <KP2> {	[  KP_Down,	KP_2	]	};
+-    key  <KP3> {	[  KP_Next,	KP_3	]	};
++    key  <KP7> {	[  Home,	Home	]	};
++    key  <KP8> {	[  Up,		Up	]	};
++    key  <KP9> {	[  Prior,	Prior	]	};
++
++    key  <KP4> {	[  Left,	Left	]	};
++    key  <KP5> {	[  KP_Begin	]	};
++    key  <KP6> {	[  Right,	Right	]	};
++
++    key  <KP1> {	[  End,		End	]	};
++    key  <KP2> {	[  Down,	Down	]	};
++    key  <KP3> {	[  Next,	Next	]	};
+     key <KPEN> {	[	KP_Enter	]	};
+     key <KPEQ> {	[	KP_Equal	]	};
+ 
+-    key  <KP0> {	[  KP_Insert,	KP_0	]	};
+-    key <KPDL> {	[  KP_Delete,	KP_Decimal ]	};
+-    key <KPPT> {	[  KP_Decimal,	KP_Decimal ]	};
++    key  <KP0> {	[  KP_Insert	]	};
++    key <KPDL> {	[  KP_Delete	]	};
++    key <KPPT> {	[  KP_Decimal	]	};
+ };
+ 
+ hidden partial keypad_keys

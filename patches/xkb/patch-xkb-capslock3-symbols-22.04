@@ -1,0 +1,34 @@
+--- capslock.dist	2025-04-06 08:14:05.662573479 +0300
++++ capslock	2025-04-06 08:13:02.189242744 +0300
+@@ -10,9 +10,30 @@
+     modifier_map Shift { Shift_Lock };
+ };
+ 
++//- hidden partial modifier_keys
++//- xkb_symbols "grouplock" {
++//-     replace key <CAPS> { [ ISO_Next_Group, Caps_Lock ] };
++//- };
++
+ hidden partial modifier_keys
+ xkb_symbols "grouplock" {
+-    replace key <CAPS> { [ ISO_Next_Group, Caps_Lock ] };
++    // Define the custom type Caps behavior
++    type "NX_CAPS" {
++        modifiers = Shift+Control;
++        map[None] = Level1;
++        map[Shift] = Level2;
++        map[Control] = Level3;
++        level_name[Level1] = "Base";
++        level_name[Level2] = "Shift";
++        level_name[Level3] = "Ctrl";
++    };
++    key <CAPS> {
++        type[Group1] = "NX_CAPS",
++        [ ISO_First_Group, Caps_Lock, ISO_Last_Group ]
++        //- [ ISO_First_Group, ISO_Last_Group, Caps_Lock ],
++        //- actions[Group1] = [LockGroup(group=1), LockGroup(group=2), LockMods(modifiers=Lock)]
++        //- actions[Group1] = [NoAction(), NoAction(), LockMods(modifiers=Lock)]
++    };
+ };
+ 
+ hidden partial modifier_keys

@@ -1,0 +1,19 @@
+--- extra.dist	2021-06-08 23:20:40.000000000 +0300
++++ extra	2025-04-05 21:43:50.200329041 +0300
+@@ -134,6 +134,16 @@
+         level_name[Level4] = "Shift Alt";
+         level_name[Level5] = "Lock";
+     };
++    // Define the custom type Caps behavior
++    type "NX_CAPS" {
++        modifiers = Shift+Control;
++        map[None] = Level1;
++        map[Shift] = Level2;
++        map[Control] = Level3;
++        level_name[Level1] = "Base";
++        level_name[Level2] = "Shift";
++        level_name[Level3] = "Ctrl";
++    };
+ };
+ 
+ // This enables the four-level shifting also for the keypad.

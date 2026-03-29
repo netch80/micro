@@ -1,0 +1,20 @@
+--- us.dist	2021-11-02 16:14:50.931822377 +0200
++++ us	2021-11-18 16:31:09.861127351 +0200
+@@ -40,7 +40,7 @@
+     key <AC08> {	[	  k,	K		]	};
+     key <AC09> {	[	  l,	L		]	};
+     key <AC10> {	[ semicolon,	colon		]	};
+-    key <AC11> {	[ apostrophe,	quotedbl	]	};
++    key <AC11> {	[ apostrophe,	quotedbl, U02BC, U02BD	]	};
+ 
+     key <AB01> {	[	  z,	Z 		]	};
+     key <AB02> {	[	  x,	X		]	};
+@@ -54,6 +54,8 @@
+     key <AB10> {	[     slash,	question	]	};
+ 
+     key <BKSL> {	[ backslash,         bar	]	};
++
++    include "level3(ralt_switch)"
+ };
+ 
+ partial alphanumeric_keys

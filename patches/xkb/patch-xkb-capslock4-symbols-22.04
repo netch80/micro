@@ -1,0 +1,22 @@
+--- capslock.dist	2025-04-06 08:14:05.662573479 +0300
++++ capslock	2025-04-08 19:05:13.017802447 +0300
+@@ -10,9 +10,18 @@
+     modifier_map Shift { Shift_Lock };
+ };
+ 
++//- hidden partial modifier_keys
++//- xkb_symbols "grouplock" {
++//-     replace key <CAPS> { [ ISO_Next_Group, Caps_Lock ] };
++//- };
++
+ hidden partial modifier_keys
+ xkb_symbols "grouplock" {
+-    replace key <CAPS> { [ ISO_Next_Group, Caps_Lock ] };
++    // Define the custom type Caps behavior
++    key <CAPS> {
++        type[Group1] = "NX_CAPS",
++        [ ISO_Next_Group, Caps_Lock, ISO_First_Group, ISO_Last_Group ]
++    };
+ };
+ 
+ hidden partial modifier_keys
