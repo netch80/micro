@@ -1,0 +1,15 @@
+--- group__dist	2024-02-05 03:24:20.000000000 +0200
++++ group	2026-06-17 14:49:56.854144483 +0300
+@@ -73,7 +73,11 @@
+ // while Shift+Caps_Lock toggles CapsLock.
+ partial modifier_keys
+ xkb_symbols "caps_toggle" {
+-    key <CAPS> {[  ISO_Next_Group,  Caps_Lock  ], type[group1] = "TWO_LEVEL" };
++    replace key <CAPS> {
++        type[Group1] = "NX_CAPS",
++        type[Group2] = "NX_CAPS",
++        [ ISO_Next_Group, Caps_Lock, ISO_First_Group, ISO_Last_Group ]
++    };
+ };
+ 
+ // Pressing Shift+Caps_Lock switches to the next group.

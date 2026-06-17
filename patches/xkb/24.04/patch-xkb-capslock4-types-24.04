@@ -1,0 +1,19 @@
+--- extra__dist	2026-06-17 12:47:45.939267636 +0300
++++ extra	2026-06-17 14:49:54.637107258 +0300
+@@ -140,4 +140,16 @@
+ 	level_name[Level4] = "Shift AltGr";
+ 	level_name[Level5] = "Lock";
+     };
++    // Define the custom type Caps behavior
++    type "NX_CAPS" {
++	modifiers = Shift+Control+Alt;
++	map[None] = Level1;
++	map[Shift] = Level2;
++	map[Control] = Level3;
++	map[Alt] = Level4;
++	level_name[Level1] = "Base";
++	level_name[Level2] = "Shift";
++	level_name[Level3] = "Ctrl";
++	level_name[Level4] = "Alt";
++    };
+ };

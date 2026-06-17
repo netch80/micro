@@ -1,0 +1,31 @@
+--- ua__dist	2026-06-17 12:13:18.865391751 +0300
++++ ua	2026-06-17 12:18:31.604169675 +0300
+@@ -13,7 +13,7 @@
+ 
+     name[Group1]= "Ukrainian";
+ 
+-    key <TLDE>	{[      apostrophe,           U02BC,          U0301,          asciitilde ]};  // Apostrophe and Stress symbol
++    key <TLDE>	{[           U02BC,      apostrophe,          U0301,          asciitilde  ]};  // Apostrophe and Stress symbol
+     key <AE01>	{[               1,          exclam,    onesuperior                      ]};
+     key <AE02>	{[               2,        quotedbl,    twosuperior,               U2019 ]};  // Single quote, used often as an apostrophe (deprecated)
+     key <AE03>	{[               3,      numerosign,        section,               U20B4 ]};  // Paragraph and Hryvnia sign
+@@ -33,6 +33,7 @@
+     key <AD04>	{[     Cyrillic_ka,     Cyrillic_KA,     registered                      ]};  // ®
+     key <AD05>	{[     Cyrillic_ie,     Cyrillic_IE,    Cyrillic_io,         Cyrillic_IO ]};
+     key <AD06>	{[     Cyrillic_en,     Cyrillic_EN,   Cyrillic_nje,        Cyrillic_NJE ]};
++    key <AD07>	{[    Cyrillic_ghe,    Cyrillic_GHE, Ukrainian_ghe_with_upturn, Ukrainian_GHE_WITH_UPTURN  ]};
+     key <AD12>	{[    Ukrainian_yi,    Ukrainian_YI, Cyrillic_hardsign,Cyrillic_HARDSIGN ]};
+ 
+     key <AC02>	{[     Ukrainian_i,     Ukrainian_I,  Cyrillic_yeru,       Cyrillic_YERU ]};
+@@ -113,8 +114,9 @@
+     key <AD08>	{[    Cyrillic_sha,     Cyrillic_SHA ]};
+     key <AD09>	{[  Cyrillic_shcha,   Cyrillic_SHCHA ]};
+     key <AD10>	{[     Cyrillic_ze,      Cyrillic_ZE ]};
+-    key <AD11>	{[     Cyrillic_ha,      Cyrillic_HA ]};
+-    key <AD12>	{[    Ukrainian_yi,     Ukrainian_YI ]};
++    key <AD11>	{[     Cyrillic_ha,      Cyrillic_HA, U201A, U201E  ]};
++    key <AD12>	{[    Ukrainian_yi,     Ukrainian_YI, U2018, U201A  ]};
++
+     key <BKSL>	{[ Ukrainian_ghe_with_upturn, Ukrainian_GHE_WITH_UPTURN ]};
+ 
+     key <AC01>	{[     Cyrillic_ef,      Cyrillic_EF ]};
