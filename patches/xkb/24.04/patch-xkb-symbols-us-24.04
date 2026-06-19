@@ -1,5 +1,5 @@
 --- us__dist	2026-06-17 12:23:53.246441036 +0300
-+++ us	2026-06-17 12:24:28.921172091 +0300
++++ us	2026-06-19 08:57:17.007588364 +0300
 @@ -42,7 +42,7 @@
      key <AC08>	{[	 k,	 K		]};
      key <AC09>	{[	 l,	 L		]};
@@ -9,12 +9,12 @@
      key <BKSL>	{[ backslash,	 bar		]};
  
      key <AB01>	{[	 z,	 Z		]};
-@@ -1645,6 +1645,8 @@
-     key <AB10> {	[     slash,	question	]	};
- 
-     key <BKSL> {	[ backslash,         bar	]	};
+@@ -55,6 +55,8 @@
+     key <AB08>	{[   comma,	 less		]};
+     key <AB09>	{[  period,	 greater	]};
+     key <AB10>	{[   slash,	 question	]};
 +
 +    include "level3(ralt_switch)"
  };
  
- // Carpalx layout created by Martin Krzywinski
+ partial alphanumeric_keys
