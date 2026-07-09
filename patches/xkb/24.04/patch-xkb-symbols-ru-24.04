@@ -1,5 +1,5 @@
 --- ru__dist	2024-02-05 03:24:20.000000000 +0200
-+++ ru	2026-06-17 12:10:47.434602528 +0300
++++ ru	2026-07-09 10:25:58.556872620 +0300
 @@ -20,7 +20,7 @@
      key <AE08>	{[          8,    asterisk,      U20BD  ]}; // ruble
  
@@ -38,15 +38,16 @@
  
      key <AB01>	{[       Cyrillic_ya,       Cyrillic_YA  ]};
      key <AB02>	{[      Cyrillic_che,      Cyrillic_CHE  ]};
-@@ -80,6 +80,7 @@
+@@ -79,7 +79,7 @@
+     key <AB08>	{[       Cyrillic_be,       Cyrillic_BE  ]};
      key <AB09>	{[       Cyrillic_yu,       Cyrillic_YU  ]};
  
-     include "kpdl(comma)"
+-    include "kpdl(comma)"
 +    include "level3(ralt_switch)"
  };
  
  partial alphanumeric_keys
-@@ -894,7 +895,7 @@
+@@ -894,7 +894,7 @@
      include "ru(common)"
      name[Group1]= "Russian (plus Ukrainian and Belarusian letters)";
  
@@ -55,7 +56,7 @@
      key <AE01> { [      1,      exclam,      division,       U2248  ] };  // Division Sign and Almost Equal To
      key <AE02> { [      2,    quotedbl,      currency,    infinity  ] };
      key <AE03> { [      3,  numerosign,       section,       U20B4  ] };  // Paragraph and Hryvnia sign
-@@ -913,6 +914,7 @@
+@@ -913,6 +913,7 @@
      key <AD05> { [       Cyrillic_ie,       Cyrillic_IE,   Cyrillic_io,          Cyrillic_IO  ] };
      key <AD07> { [      Cyrillic_ghe,      Cyrillic_GHE, Ukrainian_ghe_with_upturn, Ukrainian_GHE_WITH_UPTURN ] };
      key <AD10> { [       Cyrillic_ze,       Cyrillic_ZE,     paragraph                        ] };
